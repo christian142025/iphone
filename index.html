@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>Calculadora de Precios</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 10px;
+      padding: 0;
+    }
+
+    h2 {
+      font-size: 1.3em;
+      margin-bottom: 10px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 10px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 600px;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      white-space: nowrap;
+    }
+
+    input[type="number"], select {
+      width: 90px;
+      padding: 6px;
+      font-size: 1em;
+    }
+
+    .total {
+      font-weight: bold;
+      font-size: 1.2em;
+      margin-top: 20px;
+    }
+
+    .descuento, .botones {
+      margin-top: 20px;
+    }
+
+    .botones button {
+      margin-right: 10px;
+      padding: 8px 16px;
+      font-size: 1em;
+    }
+
+    @media (max-width: 600px) {
+      input[type="number"], select {
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 8px;
+      }
+
+      label {
+        display: block;
+        margin-top: 10px;
+      }
+
+      .descuento select,
+      .descuento input {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Calculadora de Precios - SURTIDO</h2>
+
+  <!-- Tabla de productos -->
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Cantidad</th>
+          <th>Producto</th>
+          <th>Precio Unitario</th>
+          <th>Total por Producto</th>
+        </tr>
+      </thead>
+      <tbody id="productos-body">
+        <!-- Productos dinámicos -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Botón Limpiar Historial -->
+  <div class="botones">
+    <button onclick="limpiarHistorial()">Limpiar Historial</button>
+  </div>
+
+  <!-- Campo de descuento -->
+  <div class="descuento">
+    <label for="tipo-descuento">Tipo de Descuento:</label>
+    <select id="tipo-descuento" onchange="calcularTotal()">
+      <option value="porcentaje">Porcentaje (%)</option>
+      <option value="fijo" selected>Monto Fijo ($)</option>
+    </select>
+
+    <label for="valor-descuento">Valor del Descuento:</label>
+    <input type="number" id="valor-descuento" min="0" value="0" oninput="calcularTotal()" />
+  </div>
+
+  <!-- Totales -->
+  <div class="total">Total General: $<span id="total-general">0.00</span></div>
+  <div class="total">Descuento Aplicado: $<span id="descuento-aplicado">0.00</span></div>
+  <div class="total">Total Final: $<span id="total-final">0.00</span></div>
+
+  <script>
+    const productos = [
+      { nombre: "QUESO FRESCO", precio: 23.00 },
+      { nombre: "QUESO FRESCO GRANDE", precio: 92.00 },
+      { nombre: "QUESO PANTE", precio: 20.00 },
+      { nombre: "QUESILLO EN (5b)", precio: 19.40 },
+      { nombre: "QUESILLO MEDIO", precio: 48.50 },
+      { nombre: "QUESILLO KILO CAMPERLAC", precio: 97.00 },
+      { nombre: "QUESILLO KILO YESENIA", precio: 98.00 },
+      { nombre: "DOBLECREMA PURO 10", precio: 90.00 },
+      { nombre: "DOBLECREMA PURO 12", precio: 90.00 },
+      { nombre: "QUESO BOTANERO PARTIDO", precio: 90.00 },
+      { nombre: "QUESO ENCHILADO PARTIDO", precio: 90.00 },
+      { nombre: "QUESO SECO ENTERO", precio: 39.00 },
+      { nombre: "MANTEQUILLA ROJO", precio: 55.00 },
+      { nombre: "QUESO AMARILLO CAJA $8.5", precio: 97.00 },
+      { nombre: "CREMA 1° 8 BOL", precio: 47.00 },
+      { nombre: "CREMA 1RA 4TO", precio: 47.00 },
+      { nombre: "CREMA DE 2° 8 BOL", precio: 26.00 },
+      { nombre: "CREMA 2A EN 4TO", precio: 26.00 },
+      { nombre: "CREMA MEZCLADA 8 BOL", precio: 34.00 },
+      { nombre: "JAMON 200GR", precio: 53.00 },
+      { nombre: "SALCHICHA SAN MILLAN", precio: 89.00 },
+      { nombre: "CHORIZO CASERO", precio: 95.00 },
+      { nombre: "CHORIZO ESPAÑOL", precio: 93.00 },
+      { nombre: "CHULETA PUERCO KG", precio: 150.00 },
+      { nombre: "TOCINO", precio: 144.00 },
+      { nombre: "CHICHARRON", precio: 25.00 },
+      { nombre: "MAIZ PAZOLERO", precio: 28.00 },
+      { nombre: "BOLILLOS", precio: 3.00 },
+      { nombre: "PANQUE VARIOS", precio: 30.00 },
+      { nombre: "MANTECADAS", precio: 20.00 },
+      { nombre: "MINI PANQUE", precio: 15.00 },
+      { nombre: "PAN DULCE BOLSA", precio: 15.00 },
+      { nombre: "POLVORON", precio: 15.00 },
+      { nombre: "PLATANITOS SAL", precio: 15.00 },
+      { nombre: "PLATANITOS QUESO", precio: 15.00 },
+      { nombre: "PLATANITOS ENCHILADOS", precio: 15.00 },
+      { nombre: "PLATANITOS DULCES", precio: 15.00 },
+      { nombre: "CHULETA DE PAVO", precio: 90.00 },
+      { nombre: "MAYONESA 3.4 KG", precio: 294.00 },
+      { nombre: "CAPSUP DE 4 KG", precio: 95.00 },
+      { nombre: "SALCHICHA DUBY", precio: 18.50 }
+    ];
+
+    const tbody = document.getElementById("productos-body");
+
+    function renderizarProductos() {
+      tbody.innerHTML = "";
+      productos.forEach((producto, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><input type="number" min="0" value="0" onchange="calcularTotal()"></td>
+          <td>${producto.nombre}</td>
+          <td>$${producto.precio.toFixed(2)}</td>
+          <td>$<span id="total-${index}">0.00</span></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function calcularTotal() {
+      let totalGeneral = 0;
+
+      productos.forEach((producto, index) => {
+        const cantidadInput = document.querySelectorAll("input")[index];
+        if (!cantidadInput) return;
+        const cantidad = parseFloat(cantidadInput.value) || 0;
+        const subtotal = cantidad * producto.precio;
+        document.getElementById(`total-${index}`).textContent = subtotal.toFixed(2);
+        totalGeneral += subtotal;
+      });
+
+      const tipoDescuento = document.getElementById("tipo-descuento").value;
+      const valorDescuento = parseFloat(document.getElementById("valor-descuento").value) || 0;
+
+      let descuentoAplicado = 0;
+      if (tipoDescuento === "porcentaje") {
+        descuentoAplicado = (valorDescuento / 100) * totalGeneral;
+      } else {
+        descuentoAplicado = valorDescuento;
+      }
+
+      const totalFinal = Math.max(0, totalGeneral - descuentoAplicado);
+
+      document.getElementById("total-general").textContent = totalGeneral.toFixed(2);
+      document.getElementById("descuento-aplicado").textContent = descuentoAplicado.toFixed(2);
+      document.getElementById("total-final").textContent = totalFinal.toFixed(2);
+    }
+
+    function limpiarHistorial() {
+      // Borrar cantidades
+      productos.forEach((_, index) => {
+        const input = document.querySelectorAll("input")[index];
+        if (input) input.value = 0;
+      });
+
+      // Reiniciar descuentos
+      document.getElementById("valor-descuento").value = 0;
+
+      // Reiniciar totales
+      document.getElementById("total-general").textContent = "0.00";
+      document.getElementById("descuento-aplicado").textContent = "0.00";
+      document.getElementById("total-final").textContent = "0.00";
+
+      // Recalcular (opcional)
+      calcularTotal();
+    }
+
+    // Inicialización
+    renderizarProductos();
+    calcularTotal(); // Calcular totales iniciales
+
+  </script>
+
+</body>
+</html>
